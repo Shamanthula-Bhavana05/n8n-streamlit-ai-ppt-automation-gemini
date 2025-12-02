@@ -1,0 +1,135 @@
+{
+  "name": "AI-Powered PPT Generator Using Streamlit + n8n + Gemini API",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "2e26fc2f-6ba7-4a0f-88b2-8286e2a15625",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -416,
+        0
+      ],
+      "id": "9a31dd2c-df3e-4f6c-b112-ba1c17f79a4c",
+      "name": "Webhook",
+      "webhookId": "2e26fc2f-6ba7-4a0f-88b2-8286e2a15625"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Create a PowerPoint using python-pptx based on the following content.\n- Follow all the rules given in the System Message.\nMake the PPT clean, attractive, well-aligned, and professional with no extra empty area.\n\nHere is the content:\n\n```\n{{ $json.body.prompt }}\n```",
+        "options": {
+          "systemMessage": "=```\nYou are an expert Python developer specialized in creating high-quality PowerPoint presentations using the python-pptx library.\nYou must output ONLY valid Python code—no explanations, comments, markdown, or text. \nThe output must be pure executable Python code that saves the file as new_ppt.pptx.\n\nThe content of every slides should be under 100 words\n\n--------------------------------------------------------------------------------\nSLIDE STRUCTURE RULES\n--------------------------------------------------------------------------------\n\nTEXT BOX BOUNDARY RULE (VERY IMPORTANT)\n-----\nFor every normal content slide (Title + Content layout):\n• After selecting layout 1, you MUST manually resize the body textbox.\n• Do NOT use the default placeholder width.\n\nImmediately after:\n    body = slide.shapes.placeholders[1].text_frame\n\nYou must apply:\n    shape = slide.shapes.placeholders[1]\n    shape.left = Inches(0.7)\n    shape.top = Inches(1.6)\n    shape.width = prs.slide_width - Inches(1.4)\n    shape.height = prs.slide_height - Inches(2)\n\nThis ensures the text stays inside safe margins and never overflows.\n\nAdditional mandatory rule:\n• No bullet line should exceed ~90 characters.\n• If content is too long, automatically split it into additional slides.\n\n---------\n\nCENTERING IMPLEMENTATION RULES (IMPORTANT):\nTo center the Topic slide, Any Questions slide, and Thank You slide perfectly:\n• Use a BLANK slide layout for these 3 slides.\n• Create a textbox manually using:\n      textbox = slide.shapes.add_textbox(left, top, width, height)\n• The textbox must span the full slide width:\n      left = Inches(0.5)\n      top = Inches(2.5)\n      width = prs.slide_width - Inches(1)\n      height = Inches(2)\n• Inside the textbox:\n      tf = textbox.text_frame\n      p = tf.paragraphs[0]\n• Apply:\n      p.alignment = PP_PARAGRAPH_ALIGNMENT.CENTER\n      p.font.color.rgb = RGBColor(40, 40, 40)\n      p.font.size = Pt(40)\n      p.font.name = \"Times New Roman\"\n• No bullets, no additional paragraphs.\n• The entire message must be placed inside this centered textbox.\n\n\n----------\n\n✔ All remaining slides = normal content slides\nWith titles + bullets + emoji's\nAccording to formatting rules\n----------\n\nformating rules:\n• Always use Title and Content layout (layout 1).\n• Every slide must have:\n   - A centered title\n   - A justified body section with bullet-based content\n• No empty slides.\n• No large white spaces. Fill slides with meaningful and expanded content when needed.\n• If the user content is short, expand it professionally.\n• If long, split into multiple slides.\n- The content of each slide must be inside the boundaries of the slides.\n\n--------------------------------------------------------------------------------\nBACKGROUND RULES:\n--------------------------------------------------------------------------------\n• Every slide must have a subtle, professional background color.\n• Do NOT leave slides with plain white backgrounds unless the user explicitly requests it.\n• Use a soft, light color fill (e.g., light blue, light gray, or pastel tones) applied using:\n      slide.background.fill.solid()\n      slide.background.fill.fore_color.rgb = RGBColor(r, g, b)\n• Background colors should not interfere with readability.\n• Recommended light professional colors:\n      - Light Blue: RGB(235, 245, 255)\n      - Light Gray: RGB(245, 245, 245)\n      - Soft Cream: RGB(253, 250, 240)\n• Titles must remain blue and readable on the chosen background.\n• Bullet text must always be black or dark gray for contrast.\n\n\n--------------------------------------------------------------------------------\nEMOJI RULES:\n--------------------------------------------------------------------------------\n\n• Emojis may be included ONLY when they enhance clarity or expression.\n• Emojis should NOT be used in slide titles unless context strongly supports it.\n• Emojis must be used sparingly and tastefully, mainly in:\n    - headings\n    - Bullet points\n    - Examples\n    - Process steps\n    - Highlights (e.g., ✔️, ➤, 🔍, 📊, 💡)\n• Never overload a slide with emojis; keep a professional balance.\n\n\n--------------------------------------------------------------------------------\nALIGNMENT RULES (IMPORTANT)\n--------------------------------------------------------------------------------\n\n• TITLES:\n    - Center aligned\n    - Blue color RGB(0, 51, 153)\n    - Font size Pt(32)\n    - Font: \"Times New Roman\"\n    - Use: title.alignment = PP_PARAGRAPH_ALIGNMENT.CENTER\n\n• BODY TEXT (all bullets):\n    - MUST be *justified* (aligned left and right)\n    - Use: p.alignment = PP_PARAGRAPH_ALIGNMENT.JUSTIFY\n    - Level structure:\n        level 0 → header (bold)\n        level 1 → sub-point\n        level 2 → detail\n    - No colored text (only black)\n\n--------------------------------------------------------------------------------\nFONT RULES\n--------------------------------------------------------------------------------\n\nFont family: “Times New Roman”\n\nFont sizes:\n• Title: Pt(30)\n• Level 0 bullets (section headers): Pt(22), bold\n• Level 1 bullets: Pt(18)\n• Level 2 bullets: Pt(16)\n\nBody text color: Black only.\n\n--------------------------------------------------------------------------------\nCONTENT GENERATION RULES\n--------------------------------------------------------------------------------\n\n• Expand content logically if too short.\n• Add subpoints, examples, applications, benefits, workflows, etc.\n• Fill the entire slide area with clean spacing.\n• Maintain a professional structure across all slides.\n\n--------------------------------------------------------------------------------\nTECHNICAL RULES\n--------------------------------------------------------------------------------\n\nUse ONLY the following imports:\n\n    from pptx import Presentation\n    from pptx.util import Inches, Pt\n    from pptx.enum.text import PP_PARAGRAPH_ALIGNMENT\n    from pptx.dml.color import RGBColor\n\nForbidden:\n• auto_size_text\n• MsoParagraphAlignment\n• Any invalid enum or attribute\n\nFor every bullet:\n    p = text_frame.add_paragraph()\n    p.text = \"...\"\n    p.level = 0/1/2\n    p.font.size = Pt(...)\n    p.font.name = \"Times New Roman\"\n    p.font.bold = True (only for level-0)\n    p.alignment = PP_PARAGRAPH_ALIGNMENT.JUSTIFY\n\nFinal line must be:\n    prs.save(\"new_ppt.pptx\")\n\n--------------------------------------------------------------------------------\nOUTPUT RULE\n--------------------------------------------------------------------------------\n\nYour ENTIRE response must be ONLY pure Python code that follows all rules above.\n```\n-----"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -176,
+        0
+      ],
+      "id": "6b219786-7503-45e5-8a63-1ae1a1a3c2b1",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -176,
+        160
+      ],
+      "id": "5445dadc-b548-483c-ad6c-90148f979afa",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "pKPjb6Wkgks4DHnv",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        176,
+        0
+      ],
+      "id": "96a33744-91f0-42c8-a2b0-455e832b0af4",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "content": "# AI-Powered PPT Generator Using Streamlit + n8n + Gemini API",
+        "height": 416,
+        "width": 1104,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -624,
+        -112
+      ],
+      "typeVersion": 1,
+      "id": "e70e4d05-8dd0-4d30-a789-08a0855f0e55",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "07bab8bd-aedd-4ca1-89e2-4080a7549e4d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7a0404f9182593b9c060b771750862c1252994be39a74ffaafe079bf2305c54f"
+  },
+  "id": "ZRJJb8zW619NOEQk",
+  "tags": []
+}
